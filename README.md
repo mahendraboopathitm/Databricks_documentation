@@ -273,4 +273,232 @@ Configuration:
 
 ---
 
+# 📘 Databricks dbutils & DBFS – Complete Documentation
+## 1. dbutils Command
+### 1.1 Overview of dbutils
+
+dbutils is a utility library in Databricks that provides helper functions to interact with:
+
+File system
+
+Notebooks
+
+Widgets
+
+Libraries
+
+Secrets
+
+### Why we use it?
+
+To automate tasks and perform system-level operations inside notebooks.
+
+### Where we use it?
+
+Interaction with DBFS
+
+Triggering other notebooks
+
+Creating widgets
+
+Installing libraries
+
+Runtime utilities
+
+## 1.2 Accessing dbutils in Notebooks
+
+In a Databricks notebook:
+
+dbutils
+```
+from pyspark.dbutils import DBUtils
+dbutils = DBUtils(spark)
+```
+## 1.3 Common dbutils Commands
+```
+File System	dbutils.fs.ls("/")
+Notebook	dbutils.notebook.run(...)
+Widgets	dbutils.widgets.text(...)
+Libraries	dbutils.library.install(...)
+Secrets	dbutils.secrets.get(...)
+```
+## 1.4 dbutils.fs (File System Operations)
+Definition
+Used to interact with files and directories in DBFS.
+### Why use?
+To read, write, delete, move files.
+Example:
+### List files in a directory
+```
+dbutils.fs.ls("/")
+```
+### Create directory
+```
+dbutils.fs.mkdirs("/mnt/data")
+```
+### Remove directory/file
+```
+dbutils.fs.rm("/mnt/data", True)
+```
+## 1.5 dbutils.notebook (Notebook Operations)
+Definition
+Used to call and manage other notebooks.
+### Why use?
+
+Creating pipelines
+
+Notebook chaining
+
+Reusing logic
+
+### Example:
+```result = dbutils.notebook.run("/Shared/child_notebook", 60, {"table": "users"})
+print(result)
+```
+## 1.6 dbutils.library (Library Operations)
+Definition
+Used to install and manage external libraries at runtime.
+Why use?
+
+To dynamically add libraries needed in a notebook.
+
+### Example:
+```
+dbutils.library.installPyPI("pandas")
+dbutils.library.restartPython()
+```
+## 1.7 dbutils.widgets (Widget Operations)
+Definition
+Used to add input widgets in a notebook UI.
+
+Why use?
+
+Parameterization
+
+Interactive dashboards
+
+### Example:
+```
+dbutils.widgets.text("input_val", "default_value", "Enter something")
+dbutils.widgets.get("input_val")
+```
+# 2. Example Usages
+### 2.1 Uploading and Downloading Files
+# Upload using DBFS CLI or UI
+```
+dbutils.fs.put("/mnt/data/example.txt", "hello world")
+```
+# Read file
+```
+dbutils.fs.head("/mnt/data/example.txt")
+```
+## 2.2 Running External Notebooks
+```
+result = dbutils.notebook.run("/Shared/process_data", 300, {"date": "2025-01-01"})
+print(result)
+```
+## 2.3 Installing and Managing Libraries
+```
+dbutils.library.installPyPI("numpy")
+dbutils.library.restartPython()
+```
+## 2.4 Interacting with Widgets
+```
+dbutils.widgets.dropdown("state", "CA", ["CA", "TX", "NY"], "Select State")
+state = dbutils.widgets.get("state")
+print(state)
+```
+# 3. Read & Write in DBFS
+## 3.1 Introduction to DBFS (Databricks File System)
+
+DBFS is a distributed file system on top of cloud storage like AWS S3, Azure Blob, or GCP.
+
+Why use?
+
+Central data storage for notebooks, jobs, and pipelines.
+
+## 3.2 Overview of DBFS
+
+Path types in DBFS:
+Type	Example
+```
+DBFS root	/dbfs/...
+DBFS path inside notebook	"dbfs:/mnt/data"
+Mounted storage	dbfs:/mnt/my_mount/data.csv
+```
+### List files:
+```
+dbutils.fs.ls("/")
+```
+## 3.3 Mount Points
+
+Example mount:
+```
+dbutils.fs.mount(
+  source = "wasbs://container@storageaccount.blob.core.windows.net",
+  mount_point = "/mnt/data",
+  extra_configs = {"fs.azure.account.key": "<key>"}
+)
+```
+## 3.4 Reading Data from DBFS
+
+### List files:
+```
+dbutils.fs.ls("/mnt/data")
+
+```
+Read a text file:
+```
+spark.read.text("dbfs:/mnt/data/myfile.txt").show()
+```
+## 3.5 Reading CSV/Parquet Files
+### CSV Example:
+```
+df = spark.read.option("header", True).csv("dbfs:/mnt/data/users.csv")
+df.show()
+```
+### Parquet Example:
+```
+df = spark.read.parquet("dbfs:/mnt/data/sales.parquet")
+```
+
+### 3.6 Reading Other File Formats
+Format	Example
+```
+JSON	spark.read.json(...)
+Avro	spark.read.format("avro").load(...)
+ORC	spark.read.orc(...)
+```
+### 3.7 Writing Data to DBFS
+```
+df.write.mode("overwrite").csv("dbfs:/mnt/output/users")
+```
+### 3.8 Writing CSV/Parquet Files
+### Write CSV:
+```
+df.write.mode("overwrite").option("header", True).csv("dbfs:/mnt/output/users_csv")
+```
+### Write Parquet:
+```
+df.write.mode("overwrite").parquet("dbfs:/mnt/output/users_parquet")
+```
+## 3.9 Commands for Writing CSV & Parquet
+### Operation	CSV	Parquet
+|Write	|.csv(...)	|.parquet(...)|
+|--------|-----------|-------------|
+|Append	|.mode("append")|	.mode("append")|
+Overwrite	|.mode("overwrite")	|.mode("overwrite")|
+  
+## 3.10 Writing Other File Formats
+### JSON:
+```
+df.write.json("dbfs:/mnt/output/users_json")
+```
+
+### 3.11 Commands Summary
+|Format  |           Read	        |         Write|
+|--------|------------------------|---------------|
+CSV	      |    spark.read.csv()	   |    df.write.csv()|
+Parquet	  |  spark.read.parquet()	  |   df.write.parquet()|
+JSON	   | spark.read.json()	    |   df.write.json()|
 
