@@ -502,3 +502,352 @@ CSV	      |    spark.read.csv()	   |    df.write.csv()|
 Parquet	  |  spark.read.parquet()	  |   df.write.parquet()|
 JSON	   | spark.read.json()	    |   df.write.json()|
 
+# Medallion Architecture & Delta Lake – Complete Documentation
+
+This document provides a detailed explanation of Medallion Architecture, Delta Lake concepts, and advanced features used in modern data engineering pipelines (especially in Databricks).
+
+---
+
+# 1. Medallion Architecture
+
+## 1.1 Introduction to Medallion
+
+Medallion Architecture is a data design pattern used in data lakes to organize data into multiple structured layers:
+
+* **Bronze Layer** – Raw data (unprocessed)
+* **Silver Layer** – Cleaned, validated, and enriched data
+* **Gold Layer** – Business-level aggregated data used for reporting
+
+### Why Medallion Architecture?
+
+* Better data quality at every stage
+* Easier debugging and traceability
+* Clear separation between raw and business-ready data
+
+### Flow
+
+```
+Source Systems → Bronze → Silver → Gold → BI/Analytics
+```
+
+### Example Scenario
+
+Assume you are receiving daily sales CSV files:
+
+* **Bronze:** Load raw CSV files into Delta tables.
+* **Silver:** Remove duplicates, handle missing values, standardize formats.
+* **Gold:** Aggregate total sales per region/group for reporting or dashboards.
+
+---
+
+## 1.2 Use Cases and Applications
+
+### Use Cases
+
+* Enterprise Data Lake modernization
+* ML feature data preparation
+* Incremental pipelines
+* Slowly Changing Dimensions
+* Stream + Batch processing
+
+### Real Applications
+
+* Generating sales dashboards
+* Feeding ML models from enriched data
+* Customer analytics and segmentation
+* Finance misreporting audits
+
+---
+
+# 2. Delta Lake (Theory)
+
+## 2.1 Introduction to Delta Lake
+
+Delta Lake is a storage layer built on top of data lakes (like S3/ADLS/DBFS) that provides:
+
+* ACID transactions
+* Schema enforcement
+* Time Travel
+* Data reliability
+
+It is widely used in Databricks for scalable data pipelines.
+
+---
+
+## 2.2 ACID Transactions
+
+ACID stands for:
+
+* **Atomicity** – All operations succeed or fail together
+* **Consistency** – Data always remains valid
+* **Isolation** – Concurrent writes never corrupt data
+* **Durability** – Once written, data is permanent
+
+### Example
+
+```python
+df.write.format("delta").mode("append").save("/mnt/sales")
+```
+
+Even if the job fails midway, your Delta table won't become corrupted due to ACID guarantees.
+
+---
+
+## 2.3 Time Travel
+
+Time Travel allows querying older versions of a Delta table.
+
+### Example
+
+```sql
+SELECT * FROM sales_table VERSION AS OF 4;
+```
+
+or using timestamp:
+
+```sql
+SELECT * FROM sales_table TIMESTAMP AS OF '2024-11-21';
+```
+
+This is useful for:
+
+* Auditing
+* Comparing old data
+* Recovering deleted data
+
+---
+
+## 2.4 Delta Table
+
+A Delta Table is stored like a normal directory but with a structured transaction log.
+
+### Example
+
+```python
+spark.sql("""
+CREATE TABLE sales_delta
+USING DELTA
+AS SELECT * FROM sales_raw
+""")
+```
+
+---
+
+## 2.5 Delta Log
+
+Every Delta table maintains a `_delta_log` directory that stores:
+
+* Metadata
+* Schema history
+* Commit logs
+* File actions and snapshots
+
+This enables ACID and Time Travel features.
+
+---
+
+## 2.6 Usage and Benefits
+
+### Benefits
+
+* Consistent and correct data
+* Scalable for large datasets
+* Supports both streaming and batch
+* Auto indexing for faster read
+
+### Typical Use in ETL
+
+```python
+bronze_df.write.format("delta").save("/mnt/bronze")
+silver_df.write.format("delta").save("/mnt/silver")
+gold_df.write.format("delta").save("/mnt/gold")
+```
+
+---
+
+## 2.7 Schema Evolution
+
+Delta supports evolving schema dynamically.
+
+### Example
+
+```python
+df.write.option("mergeSchema", "true").format("delta").save("/mnt/sales")
+```
+
+If new columns arrive, the table updates without failure.
+
+---
+
+# 3. Advanced Topics
+
+# 3.1 Lakeflow Connect
+
+Lakeflow Connect helps in moving external data sources into Databricks pipelines.
+
+## 3.1.1 Upload Files
+
+You can manually upload files from:
+
+* UI
+* CLI
+* Mounted storage sources
+
+Example:
+
+```bash
+dbfs cp sales.csv dbfs:/mnt/raw/
+```
+
+---
+
+## 3.1.2 Managed Connectors
+
+These are connectors maintained by Databricks, such as:
+
+* Salesforce
+* Azure SQL
+* Postgres
+* AWS RDS
+
+They provide reliability and secure integration.
+
+---
+
+## 3.1.3 Standard Connectors
+
+Community or open-source connectors used for:
+
+* File transfers
+* API ingestion
+* Traditional ETL movement
+
+---
+
+## 3.1.4 Data Formats Supported
+
+* CSV
+* JSON
+* Parquet
+* Avro
+* ORC
+* Delta
+
+### Example Read
+
+```python
+df = spark.read.format("csv").option("header", "true").load("/mnt/raw/sales.csv")
+```
+
+---
+
+## 3.1.5 Migrate to Delta Table
+
+You can convert existing tables to Delta:
+
+```python
+spark.sql("CONVERT TO DELTA sales_parquet")
+```
+
+---
+
+# 3.2 Delta Lake Advanced Features
+
+## 3.2.1 Operations
+
+### Common Delta Operations
+
+#### Update
+
+```sql
+UPDATE sales SET amount = amount * 1.1 WHERE region = 'APAC';
+```
+
+#### Delete
+
+```sql
+DELETE FROM sales WHERE canceled = true;
+```
+
+#### Merge (SCD Type 2)
+
+```sql
+MERGE INTO target t
+USING source s
+ON t.id = s.id
+WHEN MATCHED THEN UPDATE SET *
+WHEN NOT MATCHED THEN INSERT *
+```
+
+---
+
+## 3.2.2 Data Layout Optimization
+
+### Liquid Clustering
+
+Organizes data by key columns for faster read performance.
+
+### Data Skipping
+
+Delta automatically avoids reading files irrelevant to the query.
+
+### Tune File Size
+
+Optimize small files:
+
+```sql
+OPTIMIZE sales ZORDER BY (customer_id);
+```
+
+### Partitioning
+
+```python
+df.write.partitionBy("country").format("delta").save("/mnt/sales")
+```
+
+---
+
+## 3.2.3 Schema Enforcement & Evolution
+
+* Blocks invalid writes
+* Automatically tracks schema drift
+* Merge new fields when enabled
+
+---
+
+## 3.2.4 Table Features
+
+### Change Data Feed (CDF)
+
+Track changed rows:
+
+```sql
+ALTER TABLE sales ENABLE CHANGE DATA FEED;
+```
+
+### Table Constraints
+
+Example constraint:
+
+```sql
+ALTER TABLE sales ADD CONSTRAINT valid_amount CHECK (amount > 0);
+```
+
+### Generated Columns
+
+```sql
+ALTER TABLE events ADD COLUMN day STRING GENERATED ALWAYS AS (date_format(event_time,'yyyy-MM-dd'));
+```
+
+### Row Tracking
+
+Helps track row identity over time.
+
+### Type Widening
+
+Allows changing data types progressively
+(e.g., `int` → `bigint` without errors)
+
+---
+
+
