@@ -850,4 +850,166 @@ Allows changing data types progressively
 
 ---
 
+# 4. Catalog Explorer
+
+## 4.1 Introduction
+
+Catalog Explorer is a Databricks UI-based tool that allows users to:
+
+- Browse databases, schemas, and tables in Unity Catalog  
+- View table details, permissions, columns, statistics, lineage, and audit logs  
+- Manage access control  
+- Perform data exploration without writing SQL  
+
+It provides a centralized view of all metadata stored in Unity Catalog.
+
+---
+
+## 4.2 Why Use Catalog Explorer?
+
+### Benefits
+
+- Unified place to explore all data assets  
+- Easy governance and permission management  
+- Audit trail and lineage for compliance  
+- Helps prevent unauthorized access  
+- Enables productivity for analysts, developers, and admins  
+
+---
+
+## 4.3 What You Can View in Catalog Explorer
+
+### 1. Catalogs  
+- Logical grouping of data assets  
+- Example: `main`, `production`, `development`
+
+### 2. Schemas  
+- Subsection inside a catalog  
+- Similar to databases in traditional systems  
+- Contains tables, views, functions, etc.
+
+### 3. Tables & Views  
+For each table, you can see:
+
+- Table schema  
+- Storage format (Delta, Parquet, CSV, etc.)  
+- Location  
+- Owner details  
+- Created/Modified timestamps  
+- Record statistics  
+- Table constraints  
+- Change Data Feed status  
+
+---
+
+## 4.4 Exploring a Table – Example
+
+When selecting a table (e.g., `sales_gold`), you may see:
+
+### **Table Details**
+```
+Format: Delta
+Rows: 36,42,580
+Location: /mnt/gold/sales
+Owner: data_admin
+Created: 2024-10-01
+```
+
+### **Columns View**
+| Column Name | Data Type | Nullable | Comment |
+|-------------|------------|----------|---------|
+| sale_id     | BIGINT     | NO       | Primary key |
+| region      | STRING     | YES      | Sales region |
+| amount      | DOUBLE     | YES      | Sales amount |
+
+---
+
+## 4.5 Access Management
+
+From Catalog Explorer, you can view and assign permissions:
+
+### Example Permission Roles
+
+- `SELECT`
+- `INSERT`
+- `UPDATE`
+- `DELETE`
+- `OWNERSHIP`
+- `USAGE`
+
+### Example GRANT Statement
+
+```sql
+GRANT SELECT ON TABLE sales_gold TO `analyst_team`;
+```
+
+---
+
+## 4.6 Data Lineage View
+
+Catalog Explorer can show full data flow:
+
+```
+Raw File → Bronze Table → Silver Table → Gold Table → BI Dashboard
+```
+
+This helps in:
+
+- Impact analysis  
+- Debugging pipelines  
+- Understanding transformations  
+
+---
+
+## 4.7 SQL and Sample Queries
+
+Catalog Explorer also allows opening a notebook or SQL editor directly.
+
+### Example
+
+```sql
+SELECT region, SUM(amount) AS total_sales
+FROM sales_gold
+GROUP BY region;
+```
+
+---
+
+## 4.8 Audit Logs and Changes
+
+You can audit:
+
+- Who accessed table
+- What updates were made
+- When schema changed
+- Version history
+
+### Example Time Travel Check
+
+```sql
+DESCRIBE HISTORY sales_gold;
+```
+
+---
+
+## 4.9 Common Use Cases
+
+- Data discovery  
+- Table lookup during development  
+- Compliance and governance reporting  
+- Debugging ETL failures  
+- Tracking schema evolution  
+
+---
+
+## 4.10 Summary
+
+Catalog Explorer provides:
+
+- A centralized UI for exploring and managing all data assets  
+- Governance and permission control  
+- Powerful metadata insights  
+- Support for lineage, auditing, and schema visibility  
+
+It is an essential tool in Unity Catalog-based data engineering environments.
 
