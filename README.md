@@ -1013,3 +1013,301 @@ Catalog Explorer provides:
 
 It is an essential tool in Unity Catalog-based data engineering environments.
 
+# 10.4 Data Governance with Unity Catalog
+
+## Introduction
+
+Unity Catalog is Databricks’ unified and centralized governance solution for data and AI assets. It provides fine-grained access control, auditing, lineage, and metadata management across the entire lakehouse.
+
+It ensures that the right users have the right access to the right data at the right time.
+
+---
+
+## Key Governance Capabilities
+
+### 1. Centralized Permission Management
+
+Administrators can manage permissions for:
+
+* Catalogs
+* Schemas
+* Tables & Views
+* Functions
+* Models & Files
+
+Permissions are stored in a standard ANSI SQL–based security model.
+
+### Example GRANT Statement
+
+```sql
+GRANT SELECT ON TABLE sales_gold TO `finance_analyst`;
+```
+
+---
+
+### 2. Data Lineage Tracking
+
+Unity Catalog automatically tracks end-to-end data lineage:
+
+```
+Source File → Bronze Table → Silver Table → Gold Table → Dashboard
+```
+
+This helps in:
+
+* Impact analysis
+* Debugging pipeline failures
+* Governance & compliance reporting
+
+---
+
+### 3. Audit Logging
+
+All actions such as:
+
+* Table access
+* Updates
+* Permission changes
+* Pipeline execution
+
+are logged and can be monitored by governance teams.
+
+---
+
+### 4. Data Constraints & Quality Enforcement
+
+Unity Catalog supports constraints such as:
+
+* CHECK constraints
+* NOT NULL
+* Primary key (logical)
+* Generated columns
+
+#### Example
+
+```sql
+ALTER TABLE sales_gold 
+ADD CONSTRAINT valid_sales CHECK (amount > 0);
+```
+
+---
+
+### 5. Column-Level and Row-Level Security
+
+Unity Catalog supports:
+
+* Column masking
+* Row filtering policies
+
+#### Example – Mask PII
+
+```sql
+ALTER TABLE customer_data 
+ALTER COLUMN email SET MASKING POLICY mask_email;
+```
+
+---
+
+### 6. Centrally Managed Data Discovery
+
+Users can explore metadata using:
+
+* Catalog Explorer (UI)
+* SQL commands
+* APIs
+
+Metadata includes:
+
+* Owners
+* Table properties
+* Data lineage
+* Schema
+* Size & partitions
+
+---
+
+## Benefits of Unity Catalog Governance
+
+* Consistent policy enforcement across clouds and workspaces
+* Reduced risk of unauthorized access
+* Easier audits and compliance (GDPR, HIPAA, SOC2, ISO)
+* Automatic lineage visualization
+* Unified metadata for BI, ML, and streaming workloads
+
+---
+
+# 10.5 Unity Catalog
+
+## What is Unity Catalog?
+
+Unity Catalog is **Databricks' unified metadata and security layer**, designed to govern:
+
+* Data (Tables, Views, Files)
+* AI models
+* ML features
+* Functions & code artifacts
+
+It is the core foundation of security and data organization in the Lakehouse.
+
+---
+
+## Unity Catalog Object Hierarchy
+
+Unity Catalog organizes data in a three-level namespace:
+
+```
+CATALOG → SCHEMA → TABLE (or VIEW)
+```
+
+### Example
+
+```
+main.sales.customers
+|    |     |
+|    |     └─ Table
+|    └── Schema
+└──── Catalog
+```
+
+---
+
+## Unity Catalog Components
+
+### 1. Catalog
+
+Top-level container used to group data logically:
+
+Example:
+
+```sql
+CREATE CATALOG finance;
+```
+
+---
+
+### 2. Schema
+
+Schemas (similar to databases):
+
+```sql
+CREATE SCHEMA finance.revenue;
+```
+
+---
+
+### 3. Table
+
+Table inside a schema:
+
+```sql
+CREATE TABLE finance.revenue.sales
+USING DELTA
+AS SELECT * FROM sales_raw;
+```
+
+---
+
+## Permission Model
+
+Unity Catalog uses an ANSI-SQL-style GRANT system.
+
+```sql
+GRANT SELECT, UPDATE ON TABLE finance.revenue.sales TO `bi_team`;
+```
+
+Common permissions:
+
+* USAGE
+* SELECT
+* INSERT
+* UPDATE
+* DELETE
+* MODIFY
+* OWNERSHIP
+
+---
+
+## Storage Model
+
+Unity Catalog stores:
+
+* Data in cloud storage (S3 / ADLS / GCS)
+* Metadata in a central governance layer
+
+This provides:
+
+* ACID reliability
+* Data versioning
+* Table history
+* Secure metadata control
+
+---
+
+## Supported Workloads
+
+Unity Catalog governs:
+
+| Workload          | Support |
+| ----------------- | ------- |
+| SQL               | ✔       |
+| Delta Lake        | ✔       |
+| Streaming         | ✔       |
+| ETL Pipelines     | ✔       |
+| ML Training       | ✔       |
+| Dashboard Queries | ✔       |
+
+---
+
+## Integration with Catalog Explorer
+
+Unity Catalog assets can be:
+
+* Searched
+* Viewed
+* Documented
+* Explored
+* Audited
+
+Using the Databricks Catalog Explorer UI.
+
+---
+
+## Advantages of Unity Catalog
+
+* Centralized governance across multiple workspaces
+* Unified permissions and metadata
+* Full lineage (table, column, job, notebook)
+* Built-in security and auditing
+* Faster discovery and collaboration
+* Enterprise-grade access control
+
+---
+
+## Example End-to-End Naming
+
+```sql
+SELECT *
+FROM main.sales_gold.sales_summary;
+```
+
+Where:
+
+* `main` = catalog
+* `sales_gold` = schema
+* `sales_summary` = table
+
+---
+
+# Summary
+
+Unity Catalog enables:
+
+* Secure and centralized data governance
+* Uniform access control
+* Full lineage visibility
+* Auditing & compliance support
+* Efficient data organization
+
+It is a critical component of the Databricks Lakehouse for enterprise-grade data management.
+
+
